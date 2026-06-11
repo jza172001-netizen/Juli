@@ -99,6 +99,36 @@ create table if not exists autorizaciones (
   creado_por uuid not null default auth.uid() references auth.users(id)
 );
 
+-- ── Gestión académica: cursos y ponencias ───────────────────
+-- El abogado es ponente; hoy maneja el material en Drive de forma
+-- rudimentaria. Esto lo centraliza con su material asociado.
+create table if not exists cursos (
+  id uuid primary key default gen_random_uuid(),
+  titulo text not null,
+  tipo text not null default 'curso',              -- curso, ponencia, taller
+  descripcion text,
+  entidad text,                                    -- dónde se dicta / organiza
+  fecha date,
+  lugar text,
+  estado text not null default 'programado',        -- programado, dictado, archivado
+  creado_por uuid not null default auth.uid() references auth.users(id),
+  creado_en timestamptz not null default now()
+);
+
+-- Material del curso/ponencia. Hash SHA-256 también aquí:
+-- trazabilidad Ley 527 del material académico (slides, PDFs).
+create table if not exists materiales_curso (
+  id uuid primary key default gen_random_uuid(),
+  curso_id uuid not null references cursos(id) on delete cascade,
+  nombre text not null,
+  ruta_storage text not null,
+  hash text not null,
+  tipo_mime text,
+  tamano_bytes bigint,
+  subido_por uuid not null default auth.uid() references auth.users(id),
+  subido_en timestamptz not null default now()
+);
+
 -- ============================================================
 -- Auditoría automática: trigger genérico sobre las tablas núcleo
 -- ============================================================
@@ -146,6 +176,16 @@ create trigger auditar_autorizaciones
   after insert on autorizaciones
   for each row execute function registrar_auditoria();
 
+drop trigger if exists auditar_cursos on cursos;
+create trigger auditar_cursos
+  after insert or update or delete on cursos
+  for each row execute function registrar_auditoria();
+
+drop trigger if exists auditar_materiales_curso on materiales_curso;
+create trigger auditar_materiales_curso
+  after insert or update or delete on materiales_curso
+  for each row execute function registrar_auditoria();
+
 -- ============================================================
 -- RLS: cada usuario solo ve lo suyo
 -- ============================================================
@@ -156,6 +196,8 @@ alter table doc_chunks enable row level security;
 alter table consultas_kyc enable row level security;
 alter table audit_log enable row level security;
 alter table autorizaciones enable row level security;
+alter table cursos enable row level security;
+alter table materiales_curso enable row level security;
 
 create policy "clientes propios" on clientes
   for all using (creado_por = auth.uid()) with check (creado_por = auth.uid());
@@ -174,6 +216,12 @@ create policy "consultas kyc propias" on consultas_kyc
 
 create policy "autorizaciones propias" on autorizaciones
   for all using (creado_por = auth.uid()) with check (creado_por = auth.uid());
+
+create policy "cursos propios" on cursos
+  for all using (creado_por = auth.uid()) with check (creado_por = auth.uid());
+
+create policy "materiales propios" on materiales_curso
+  for all using (subido_por = auth.uid()) with check (subido_por = auth.uid());
 
 -- El audit log: cada usuario lee solo sus acciones. Los triggers
 -- escriben con security definer; las acciones manuales (ej. una
@@ -239,5 +287,31 @@ create policy "leer carpeta propia" on storage.objects
 create policy "borrar de carpeta propia" on storage.objects
   for delete using (
     bucket_id = 'documentos'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+-- ============================================================
+-- Storage: bucket privado de material académico (cursos/ponencias)
+-- Mismo patrón por carpeta {auth.uid()}/... que documentos.
+-- ============================================================
+insert into storage.buckets (id, name, public)
+values ('materiales', 'materiales', false)
+on conflict (id) do nothing;
+
+create policy "subir material propio" on storage.objects
+  for insert with check (
+    bucket_id = 'materiales'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+create policy "leer material propio" on storage.objects
+  for select using (
+    bucket_id = 'materiales'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+create policy "borrar material propio" on storage.objects
+  for delete using (
+    bucket_id = 'materiales'
     and (storage.foldername(name))[1] = auth.uid()::text
   );

@@ -28,7 +28,7 @@ export default async function PaginaKYC() {
       <main className="mx-auto max-w-6xl px-6 py-8">
         <h1 className="text-2xl font-semibold">KYC</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Cruce contra listas restrictivas (ONU, OFAC, PEP)
+          Cruce contra listas restrictivas: ONU, OFAC y PEP
         </p>
 
         {!disponible && (

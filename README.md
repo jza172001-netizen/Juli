@@ -66,6 +66,8 @@ npm start
 
 1. Crea proyecto en https://supabase.com
 2. Ve al SQL Editor y corre `db/schema.sql` (copiar y pegar todo).
+   - Si ya lo corriste antes del módulo académico, aplica solo
+     `db/migrations/0002_modulo_academico.sql` (cursos y ponencias).
 3. Crea un usuario de prueba en **Authentication > Users**.
 4. Copia las claves en `.env.local`:
    - `NEXT_PUBLIC_SUPABASE_URL` (Settings > API > Project URL)
@@ -129,6 +131,7 @@ GET /casos → Listado
 - `GET /clientes` `POST /clientes/actions` — Clientes
 - `GET /casos` `POST /casos/actions` — Casos
 - `GET /documentos` `POST /documentos/actions` — Documentos
+- `GET /cursos` `POST /cursos/actions` — Cursos y ponencias + material
 - `GET /triaje` — Semáforo (Fase 2)
 - `GET /kyc` `POST /kyc/actions` — KYC (Fase 2)
 - `GET /triangular` `POST /triangular/actions` — Motor IA (Fase 3)

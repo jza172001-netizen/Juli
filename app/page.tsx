@@ -22,6 +22,12 @@ const modulos = [
     fase: "Fase 1",
   },
   {
+    href: "/cursos",
+    titulo: "Cursos y ponencias",
+    descripcion: "Centraliza tu material académico, fuera de Drive.",
+    fase: "Fase 1",
+  },
+  {
     href: "/triaje",
     titulo: "Triaje",
     descripcion: "Semáforo: ¿caso rápido de flujo de caja o pantano?",
@@ -47,12 +53,17 @@ export default async function PaginaInicio() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ count: nClientes }, { count: nCasos }, { count: nDocumentos }] =
-    await Promise.all([
-      supabase.from("clientes").select("*", { count: "exact", head: true }),
-      supabase.from("casos").select("*", { count: "exact", head: true }),
-      supabase.from("documentos").select("*", { count: "exact", head: true }),
-    ]);
+  const [
+    { count: nClientes },
+    { count: nCasos },
+    { count: nDocumentos },
+    { count: nCursos },
+  ] = await Promise.all([
+    supabase.from("clientes").select("*", { count: "exact", head: true }),
+    supabase.from("casos").select("*", { count: "exact", head: true }),
+    supabase.from("documentos").select("*", { count: "exact", head: true }),
+    supabase.from("cursos").select("*", { count: "exact", head: true }),
+  ]);
 
   return (
     <>
@@ -61,7 +72,7 @@ export default async function PaginaInicio() {
         <h1 className="text-2xl font-semibold">Panel</h1>
         <p className="mt-1 text-sm text-slate-500">
           {nClientes ?? 0} clientes · {nCasos ?? 0} casos · {nDocumentos ?? 0}{" "}
-          documentos
+          documentos · {nCursos ?? 0} cursos
         </p>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

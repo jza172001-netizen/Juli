@@ -51,6 +51,7 @@ nucleo/
 │   ├── clientes/              # Registrar clientes + Habeas Data
 │   ├── casos/                 # Abrir casos, ver estado
 │   ├── documentos/            # Subir docs (hash SHA-256 Ley 527)
+│   ├── cursos/                # Cursos y ponencias + material (Drive→aquí)
 │   ├── triaje/                # Semáforo: caso rápido o pantano
 │   ├── kyc/                   # Consultar listas restrictivas
 │   └── triangular/            # Motor de consulta (IA)
@@ -78,7 +79,7 @@ nucleo/
 | Fase | Estado | Qué es |
 |---|---|---|
 | **0 — Setup** | ✅ COMPLETA | Repo, Supabase, Auth, esquema, deploy Vercel. |
-| **1 — Repositorio (MVP núcleo)** | 🔨 CONSTRUCCIÓN | Clientes + casos + documentos con autorización + audit log. |
+| **1 — Repositorio (MVP núcleo)** | 🔨 CONSTRUCCIÓN | Clientes + casos + documentos + cursos/ponencias con autorización + audit log. |
 | **2 — KYC + Triaje** | ⏳ SIGUIENTE | Integración API KYC, flujo semáforo. Elegir proveedor primero. |
 | **3 — Motor de triangulación** | ⏳ DESPUÉS | Pipeline RAG: ingerir docs, embeddings, búsqueda semántica + Claude. |
 | **4 — Hardening legal** | ⏳ FINAL | Ley 527 probatoria (sellado, firma electrónica), RNBD. |

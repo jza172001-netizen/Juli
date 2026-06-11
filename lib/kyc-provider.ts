@@ -3,6 +3,13 @@
 // de mantenimiento. El proveedor concreto está por confirmar
 // (Verdata / TusDatos.co — decisión abierta del plan).
 //
+// Listas que el abogado pide cruzar:
+//   - ONU  (Consejo de Seguridad)
+//   - OFAC (Tesoro de EE. UU. — listas SDN). El abogado mencionó
+//     "OSIC", que se interpreta como una referencia imprecisa a OFAC.
+//   - PEP  (Personas Expuestas Políticamente)
+// El proveedor elegido en Fase 2 debe cubrir al menos estas tres.
+//
 // Toda consulta se guarda en `consultas_kyc` como evidencia con
 // fecha y hora — eso lo hace la ruta /api/kyc, no este módulo.
 
