@@ -20,12 +20,19 @@ export async function consultarKYCAction(formData: FormData) {
 
   const resultado = await consultarKYC(cliente.identificacion);
 
-  await supabase.from("consultas_kyc").insert({
+  // La consulta misma es evidencia: si no se guarda, se falla visible.
+  const { error } = await supabase.from("consultas_kyc").insert({
     cliente_id: clienteId,
     identificacion_consultada: cliente.identificacion,
     resultado_json: resultado,
     proveedor: resultado.proveedor,
   });
+
+  if (error) {
+    throw new Error(
+      `La consulta KYC se ejecutó pero NO quedó guardada como evidencia: ${error.message}`
+    );
+  }
 
   revalidatePath("/kyc");
 }

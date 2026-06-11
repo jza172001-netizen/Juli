@@ -60,7 +60,10 @@ export async function consultarKYC(
   });
 
   if (!res.ok) {
-    throw new Error(`El proveedor de KYC respondió ${res.status}: ${await res.text()}`);
+    // No propagar el cuerpo crudo del proveedor: puede contener
+    // detalles internos y termina en el navegador vía las rutas API.
+    console.error(`KYC ${process.env.KYC_PROVEEDOR}: ${res.status} ${await res.text()}`);
+    throw new Error(`El proveedor de KYC respondió con error ${res.status}`);
   }
 
   const resultado = (await res.json()) as Record<string, unknown>;

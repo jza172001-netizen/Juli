@@ -11,11 +11,17 @@ export async function registrarAccion(
   entidadId?: string,
   detalles?: Record<string, unknown>
 ) {
-  await supabase.from("audit_log").insert({
+  const { error } = await supabase.from("audit_log").insert({
     usuario_id: usuarioId,
     accion,
     entidad,
     entidad_id: entidadId ?? null,
     detalles: detalles ?? null,
   });
+
+  // En una plataforma probatoria, una acción sin rastro de auditoría
+  // no puede pasar en silencio: se falla visiblemente.
+  if (error) {
+    throw new Error(`No se pudo registrar en el audit log: ${error.message}`);
+  }
 }

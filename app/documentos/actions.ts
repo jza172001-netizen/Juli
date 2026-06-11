@@ -19,6 +19,20 @@ export async function subirDocumento(formData: FormData) {
     throw new Error("No se proporcionó archivo");
   }
 
+  const casoId = String(formData.get("caso_id") ?? "").trim() || null;
+
+  // Verificar pertenencia del caso: RLS limita el select a casos propios.
+  if (casoId) {
+    const { data: caso } = await supabase
+      .from("casos")
+      .select("id")
+      .eq("id", casoId)
+      .maybeSingle();
+    if (!caso) {
+      throw new Error("Caso no encontrado");
+    }
+  }
+
   const buffer = await archivo.arrayBuffer();
   const hash = createHash("sha256")
     .update(Buffer.from(buffer))
@@ -34,8 +48,6 @@ export async function subirDocumento(formData: FormData) {
     throw new Error(`Error al subir: ${uploadError.message}`);
   }
 
-  const casoId = String(formData.get("caso_id") ?? "").trim() || null;
-
   const { error: dbError } = await supabase.from("documentos").insert({
     caso_id: casoId,
     nombre: archivo.name,
@@ -46,6 +58,8 @@ export async function subirDocumento(formData: FormData) {
   });
 
   if (dbError) {
+    // Compensación: no dejar archivos huérfanos en el storage
+    await supabase.storage.from("documentos").remove([ruta]);
     throw new Error(`Error al registrar documento: ${dbError.message}`);
   }
 

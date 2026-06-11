@@ -54,10 +54,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (documento.tipo_mime && !MIME_TEXTO.includes(documento.tipo_mime)) {
+  // MIME vacío o desconocido también se rechaza: los navegadores
+  // reportan "" para extensiones raras y un binario pasaría el filtro.
+  if (!documento.tipo_mime || !MIME_TEXTO.includes(documento.tipo_mime)) {
     return NextResponse.json(
       {
-        error: `Extracción de texto para ${documento.tipo_mime} aún no soportada (Fase 3 cubrirá PDF/DOCX). Sube texto plano por ahora.`,
+        error: `Extracción de texto para "${documento.tipo_mime || "desconocido"}" aún no soportada (Fase 3 cubrirá PDF/DOCX). Sube texto plano por ahora.`,
       },
       { status: 415 }
     );
@@ -83,10 +85,31 @@ export async function POST(request: NextRequest) {
   }
 
   const chunks = fragmentarTexto(texto);
-  const embeddings = await generarEmbeddings(chunks);
 
-  // Re-ingesta limpia: borrar chunks previos del documento
-  await supabase.from("doc_chunks").delete().eq("documento_id", documento.id);
+  let embeddings: number[][];
+  try {
+    embeddings = await generarEmbeddings(chunks);
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Error al generar embeddings" },
+      { status: 502 }
+    );
+  }
+
+  // Re-ingesta limpia: borrar chunks previos del documento.
+  // El delete va después de generar los embeddings para minimizar la
+  // ventana en que el documento queda desindexado.
+  const { error: errorDelete } = await supabase
+    .from("doc_chunks")
+    .delete()
+    .eq("documento_id", documento.id);
+
+  if (errorDelete) {
+    return NextResponse.json(
+      { error: `Error al limpiar chunks previos: ${errorDelete.message}` },
+      { status: 500 }
+    );
+  }
 
   const { error: errorInsert } = await supabase.from("doc_chunks").insert(
     chunks.map((textoChunk, i) => ({
@@ -98,7 +121,9 @@ export async function POST(request: NextRequest) {
 
   if (errorInsert) {
     return NextResponse.json(
-      { error: `Error al guardar chunks: ${errorInsert.message}` },
+      {
+        error: `Error al guardar chunks (el documento quedó desindexado; reintenta la ingesta): ${errorInsert.message}`,
+      },
       { status: 500 }
     );
   }

@@ -45,6 +45,22 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Verificar pertenencia del cliente: RLS limita el select a propios,
+  // así que un ID ajeno o inexistente responde igual (404, sin oráculo).
+  if (clienteId) {
+    const { data: cliente } = await supabase
+      .from("clientes")
+      .select("id")
+      .eq("id", clienteId)
+      .maybeSingle();
+    if (!cliente) {
+      return NextResponse.json(
+        { error: "Cliente no encontrado" },
+        { status: 404 }
+      );
+    }
+  }
+
   try {
     const resultado = await consultarKYC(identificacion, tipoIdentificacion);
 

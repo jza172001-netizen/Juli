@@ -95,9 +95,15 @@ export default async function PaginaKYC() {
                           <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-700">
                             En listas ⚠️
                           </span>
-                        ) : (
+                        ) : hallazgos?.nivel_riesgo === "bajo" ? (
                           <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">
                             Sin hallazgos
+                          </span>
+                        ) : (
+                          // "desconocido" o sin interpretar: NUNCA pintarlo
+                          // verde — requiere revisión manual del abogado.
+                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">
+                            Revisar manualmente
                           </span>
                         )}
                       </td>

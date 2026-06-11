@@ -39,6 +39,16 @@ export async function subirMaterial(formData: FormData) {
     throw new Error("Selecciona un curso o ponencia");
   }
 
+  // Verificar pertenencia: RLS limita el select a cursos propios.
+  const { data: curso } = await supabase
+    .from("cursos")
+    .select("id")
+    .eq("id", cursoId)
+    .maybeSingle();
+  if (!curso) {
+    throw new Error("Curso no encontrado");
+  }
+
   const archivo = formData.get("archivo") as File;
   if (!archivo || archivo.size === 0) {
     throw new Error("No se proporcionó archivo");
@@ -67,6 +77,8 @@ export async function subirMaterial(formData: FormData) {
   });
 
   if (dbError) {
+    // Compensación: no dejar archivos huérfanos en el storage
+    await supabase.storage.from("materiales").remove([ruta]);
     throw new Error(`Error al registrar material: ${dbError.message}`);
   }
 
