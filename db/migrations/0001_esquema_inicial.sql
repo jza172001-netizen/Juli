@@ -1,0 +1,4 @@
+-- Migración 0001: esquema inicial (Fase 0)
+-- Idéntica a db/schema.sql en este punto. Las migraciones
+-- siguientes solo contienen los cambios incrementales.
+-- Ver db/schema.sql para el estado completo del esquema.
