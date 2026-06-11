@@ -7,8 +7,15 @@ import { crearClienteServidor } from "@/lib/supabase-server";
 export async function iniciarSesion(formData: FormData) {
   const supabase = await crearClienteServidor();
 
+  // Se puede entrar con usuario corto ("juli") o correo completo:
+  // sin "@" se asume el dominio interno @nucleo.app
+  let email = String(formData.get("email")).trim().toLowerCase();
+  if (email && !email.includes("@")) {
+    email = `${email}@nucleo.app`;
+  }
+
   const { error } = await supabase.auth.signInWithPassword({
-    email: String(formData.get("email")),
+    email,
     password: String(formData.get("password")),
   });
 
